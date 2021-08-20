@@ -63,5 +63,43 @@ source secrets.sh
 ## Run
 
 ```
-pyton3 main.py
+python3 main.py
+```
+
+
+## Auto start on boot
+
+Prepare log folder
+```
+sudo mkdir /var/log/rpi-led
+sudo chown pi:pi /var/log/rpi-led
+```
+
+Create a systemd service in `/etc/systemd/system/rpi-led.service`
+```
+[Unit]
+Description=rpi-led
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment='STDOUT=/var/log/rpi-led/main.log'
+Environment='STDERR=/var/log/rpi-led/main.err.log'
+Environment='GITHUB_TOKEN=mysecrettoken'
+# if proxy
+#Environment='HTTP_PROXY=http://myproxy.domain.com'
+#Environment='HTTPS_PROXY=http://myproxy.domain.com'
+KillSignal=SIGINT
+ExecStart=/usr/bin/python3 /home/pi/rpi-led-github-stars/main.py > ${STDOUT} 2> ${STDERR}
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start and enable the service
+```
+sudo systemctl daemon-reload
+sudo systemctl start rpi-led
+sudo systemctl enable rpi-led
 ```
